@@ -1,4 +1,6 @@
 import { Component, OnInit, ɵConsole } from "@angular/core";
+import {Tile} from '../model/tile';
+import {Board} from '../model/board';
 
 const EQUATORIAL_RADIUS = 6378;
 
@@ -44,16 +46,23 @@ export class ConfigPainelComponent implements OnInit {
   destinations: Variable[];
   mapLineData: marker[];
 
-  constructor() {}
+  numLines: number;
+  numColumns: number;
+  board: Board;
+
+  constructor() {
+    
+  }
 
   ngOnInit() 
   {
     console.log("ngOnInit");
+    
 
     this.probCruzamento = 0.6;
     this.probMutacao = 0.01;
-    this.populationSize = 70;
-    this.maxNumOfGenerations = 50;
+    this.populationSize = 4;
+    this.maxNumOfGenerations = 2;
     this.bestInd = [];
     this.numOfBestToKeep = 5;
     this.numCurrentGeneration = 0;
@@ -67,24 +76,21 @@ export class ConfigPainelComponent implements OnInit {
     this.numOfIndividualsInTourney = 4;
     this.numOfElitismInd = 2;
 
+    this.numLines = 8;
+    this.numColumns = 8;
+    this.newBoard();
+
   }
 
-  newSightseeing(destinations: marker[])
+  newBoard(event = null)
   {
-    console.log("newSightseeing");
-    this.destinations = [];
-    for (const markObj of destinations) 
-    {
-      this.destinations.push(
-        {
-          id: markObj.label,
-          data: markObj
-        });
-    }
-
+    console.log("newBoard");
+    this.board = new Board(this.numLines, this.numColumns);
+    this.destinations = this.board.tiles;
     //console.log("destinations ", destinations);
     //console.log("this ", this.destinations);
-    this.numOfVariables = destinations.length;
+    this.numOfVariables = this.destinations.length;
+    console.log("board", this.board);
   }
 
   numOfNewIndividual() 
@@ -273,7 +279,6 @@ export class ConfigPainelComponent implements OnInit {
     }
     */
     this.plotPerformanceGraph(this.generations);
-    this.mapLineData = this.getBestIndLineData();
     //console.log(this.generations);
   }
 
@@ -569,21 +574,6 @@ export class ConfigPainelComponent implements OnInit {
     }
     return gene;
   }
-
-  
-  hasLocationID(chromosomeBlock: Variable[], geneToTest: Variable): boolean
-  {
-      for (const iGene of chromosomeBlock)
-      {
-        if(iGene.id == geneToTest.id)
-        {
-          console.log("hasLocationID true");
-          return true;
-        }
-      }
-
-      return false;
-  }
   
   applyMutation(population: individual[]) 
   {
@@ -593,7 +583,7 @@ export class ConfigPainelComponent implements OnInit {
     for (let j = 0; j < population.length; j++) 
     {
       let indiv = population[j];
-      newChromosome = indiv.chromosome.concat();;
+      newChromosome = indiv.chromosome.concat();
       switch (this.mutationMode) 
       {
         case "Gene":
@@ -613,6 +603,8 @@ export class ConfigPainelComponent implements OnInit {
       if (mutationApplied) 
       {
         population.splice(j, 1, this.getIndividual(newChromosome));
+        console.log(newChromosome);
+        console.log(indiv.chromosome);
       } 
     }
   }
@@ -702,7 +694,7 @@ export class ConfigPainelComponent implements OnInit {
   getIndividual(chromosome: Variable[]): individual {
     //console.log("getIndividual");
     let indiv: individual = {
-      chromosome: chromosome,
+      chromosome: chromosome.concat(),
     };
 
     indiv.fitness = this.calcFitness(indiv);
@@ -722,7 +714,7 @@ export class ConfigPainelComponent implements OnInit {
       insertedInd = false;
       if (this.hasIndividual(indiv)) 
       {
-        //console.log("Already in the best");
+        console.log("Already in the best");
         insertedInd = true;
         return;
       } 
@@ -762,7 +754,7 @@ export class ConfigPainelComponent implements OnInit {
       let areAllVarEqual = true;
       for (const iVar in element.chromosome) {
         ///////
-        if(element.chromosome[iVar].id != indiv.chromosome[iVar].id)
+        if(element.chromosome[iVar] != indiv.chromosome[iVar])
         {
           areAllVarEqual = false;
           break;
@@ -784,9 +776,10 @@ export class ConfigPainelComponent implements OnInit {
 
   calcFitness(indiv: individual): number 
   {
+    console.log("calcFitness");
     let fitness = 0;
-    indiv.totalDistance = this.getTotalDistance(indiv);
-    fitness = EQUATORIAL_RADIUS - indiv.totalDistance;
+    //indiv.totalDistance = this.getTotalDistance(indiv);
+    fitness = this.calcNumOfValidMoviments(indiv);
     //console.log("fitness", fitness)
     if(fitness < 0) 
     {
@@ -796,25 +789,24 @@ export class ConfigPainelComponent implements OnInit {
     return fitness;
   }
 
-  getTotalDistance(indiv: individual): number
+  calcNumOfValidMoviments(indiv: individual): number
   {
-    //console.log(indiv.chromosome);
-    let totalDistance = 0;
-    ///it does not includes the distance between the last and the firts city;
-    for (let index = 0; index < indiv.chromosome.length - 1; index++) 
-    {
-      totalDistance += this.asTheCrowFlies(
-        indiv.chromosome[index].data.lat, indiv.chromosome[index].data.lng,
-        indiv.chromosome[index+1].data.lat, indiv.chromosome[index+1].data.lng
-      );
+    let count = 0;
+    for (const iTile in indiv.chromosome) {
+      let tile = indiv.chromosome[iTile];
+      let nextTile = indiv.chromosome[iTile+1];
+      if(tile.allowedDest.includes(nextTile)){
+        console.log("calcNumOfValidMoviments", indiv);
+        console.log("tile", tile);
+        console.log("nextTile", nextTile);
+        count++;
+      }
+      else{
+        console.log(tile.id + nextTile.id);
+      }
     }
-    ///for the way between the last and the firts location
-    totalDistance += this.asTheCrowFlies(
-      indiv.chromosome[indiv.chromosome.length - 1].data.lat, indiv.chromosome[indiv.chromosome.length - 1].data.lng,
-      indiv.chromosome[0].data.lat, indiv.chromosome[0].data.lng
-    );
-    //console.log("------------------------ totalDistance ", totalDistance);
-    return totalDistance;
+    indiv.numOfValidKnightMoviments = count;
+    return count;
   }
 
   binArrayToDecimal(bits: number[]) 
@@ -868,21 +860,6 @@ export class ConfigPainelComponent implements OnInit {
     return distance; 
   }
   
-  getBestIndLineData()
-  {
-    let lineData: marker[] = [];
-    let bestChromosome = this.bestInd[0].chromosome.concat();
-
-    for (const location of bestChromosome) 
-    {
-      lineData.push(location.data);
-    }
-    /// for drawing the line between the firts and the last
-    lineData.push(bestChromosome[0].data)
-    //console.log("lineData", lineData);
-    return lineData;
-  }
-  
   /////////////////////
 }
 
@@ -891,7 +868,7 @@ interface individual {
   chromosome?: Variable[];
 
   ///totalDistance summing the distances between all places in the chromosome, including between the last and the first
-  totalDistance?: number;
+  numOfValidKnightMoviments?: number;
 
   ///indicates how much the the individual is good (generally is f(x)+c)
   fitness?: number;
@@ -902,9 +879,7 @@ interface individual {
 }
 
 interface Variable{
-  ///match with mark label
-  id: string;
-  data?: marker;
+  allowedDest: Tile[];
 }
  
 declare interface marker {

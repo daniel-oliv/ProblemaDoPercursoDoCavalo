@@ -7,28 +7,9 @@
 		</div>
 		<p-accordion [multiple]="true">
 			<p-accordionTab header="Inserção de pontos" [selected]="true">
-				<h2 class="rootTag container">Inserção de pontos</h2>
-		
-				<!--<app-scatter></app-scatter>-->
-				<app-map-agm [linesData]="mapLineData" (newMarkers)="newSightseeing($event)"></app-map-agm>
-				<br><br>
-				<p-table [value]="destinations" class="table table-dark">
-						<ng-template pTemplate="header">
-							<tr>
-								<!--<th *ngFor="let machine of schedulingConfig.machines">Unidade {{machine.unitID}}</th>-->
-								<th>ID</th>
-								<th>Latitude</th>
-								<th>Longintude</th>
-							</tr>
-						</ng-template>
-						<ng-template pTemplate="body" let-point>
-							<tr>
-								<td>{{point.data.label}}</td>
-								<td>{{point.data.lat}}</td>
-								<td>{{point.data.lng}}</td>
-							</tr>
-						</ng-template>
-					</p-table>
+				<h2 class="rootTag container">Tabuleiro</h2>
+
+				<app-game-board [board]="board"></app-game-board>
 					<br><br>
 			</p-accordionTab>
 			<p-accordionTab header="Curva de desempenho" [selected]="false">
@@ -48,15 +29,15 @@
 								<tr>
 									<!--<th *ngFor="let machine of schedulingConfig.machines">Unidade {{machine.unitID}}</th>-->
 									<th>Tour</th>
-									<th>Distância total - km</th>
+									<th>Número de movimentos válidos para o cavalo</th>
 									<th>fitness</th>
 									<th>Generation</th>
 								</tr>
 							</ng-template>
 							<ng-template pTemplate="body" let-indiv>
 								<tr>
-									<td><span *ngFor="let place of indiv.chromosome"> {{place.id}},  </span></td>
-									<td>{{indiv.totalDistance}}</td>
+									<td><span *ngFor="let tile of indiv.chromosome"> {{tile.id}},  </span></td>
+									<td>{{indiv.numOfValidKnightMoviments}}</td>
 									<td>{{indiv.fitness}}</td>
 									<td>{{indiv.generation}}</td>
 								</tr>
@@ -90,6 +71,18 @@
 					<button class="btn btn-primary" (click)="optimize()">Encontrar melhor solução</button>
 					<br>
 					<br>
+					<br>
+					<h6>Número de linhas: {{numLines}}</h6>
+					<p-slider class="slider" [(ngModel)]="numLines" 
+					[step]="1" [min]="3" [max]="30" 
+					[animate]="true" 
+					(onChange)="newBoard($event)"  ></p-slider>
+					<br>
+					<h6>Número de colunas: {{numColumns}}</h6>
+					<p-slider class="slider" [(ngModel)]="numColumns" 
+					[step]="1" [min]="3" [max]="30" 
+					[animate]="true" 
+					(onChange)="newBoard($event)"   ></p-slider>
 					<br>
 					<h6>Probabilidade de Cruzamento: {{probCruzamento|number:'1.2-5'}}</h6>
 					<p-slider class="slider" [(ngModel)]="probCruzamento" 
