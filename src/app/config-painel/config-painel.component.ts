@@ -74,21 +74,21 @@ export class ConfigPainelComponent implements OnInit {
     this.numOfIndividualsInTourney = 4;
     this.numOfElitismInd = 2;
 
-    this.numLines = 8;
-    this.numColumns = 8;
+    this.numLines = 3;
+    this.numColumns = 3;
     this.newBoard();
 
   }
 
   newBoard(event = null)
   {
-    console.log("newBoard");
+    //console.log("newBoard");
     this.board = new Board(this.numLines, this.numColumns);
     this.destinations = this.board.tiles;
     //console.log("destinations ", destinations);
     //console.log("this ", this.destinations);
     this.numOfVariables = this.destinations.length;
-    console.log("board", this.board);
+    //console.log("board", this.board);
   }
 
   numOfNewIndividual() 
@@ -414,7 +414,7 @@ export class ConfigPainelComponent implements OnInit {
         return this.selectByRoulette(generation);
         break;
       case "Torneio":
-        console.log("selectCouples torneio");
+        //console.log("selectCouples torneio");
         return this.selectByTourney(generation);
         break;
       default:
@@ -586,11 +586,11 @@ export class ConfigPainelComponent implements OnInit {
       {
         case "Gene":
           //console.log("applyMutation Gene");
-          mutationApplied = this.tryMutationInGenes(newChromosome);
+          [mutationApplied, newChromosome] = this.tryMutationInGenes(newChromosome);
           break;
         case "Individuo":
           //console.log("applyMutation tryOneMutation");
-          mutationApplied = this.tryOneMutation(newChromosome);
+          [mutationApplied, newChromosome] = this.tryOneMutation(newChromosome);
           break;
         default:
           //console.log("applyMutation default");
@@ -601,38 +601,75 @@ export class ConfigPainelComponent implements OnInit {
       if (mutationApplied) 
       {
         population.splice(j, 1, this.getIndividual(newChromosome));
-        console.log(newChromosome);
-        console.log(indiv.chromosome);
+        //console.log(newChromosome.concat());
+        //console.log(indiv.chromosome.concat());
       } 
     }
   }
 
-  tryMutationInGenes(newChromosome: Tile[]): boolean
+  tryMutationInGenes(baseChromosome: Tile[]): [boolean, Tile[]]
   {
     let mutationApplied = false;
-    for (let varIndex = 0; varIndex < newChromosome.length; varIndex++) 
+    let newChromosome: Tile[];
+    for (let varIndex = 0; varIndex < baseChromosome.length; varIndex++) 
       {
         if (Math.random() < this.probMutacao) 
         {
           //console.log("mutation in individual " + j + " chromosome " + k);
           mutationApplied = true;
           //console.log("before mutation" + indiv.chromosome[k]);
-          this.swapMutation(varIndex, newChromosome);
+          newChromosome = this.knightSwapMutation(varIndex, baseChromosome);
           //console.log("after mutation" + indiv.chromosome[k]);
         }
       }
-      return mutationApplied;
+      if(mutationApplied)
+      {
+        return [mutationApplied, newChromosome];
+      }
+      else
+      {
+        return [mutationApplied, baseChromosome];
+      }
   }
 
-  tryOneMutation(chromosome: Tile[]): boolean
+  tryOneMutation(chromosome: Tile[]): [boolean, Tile[]]
   {
     if (Math.random() < this.probMutacao)
     {
       let index1 = Math.floor(Math.random() * chromosome.length);
-      this.swapMutation(index1, chromosome);
-      return true;
+      this.knightSwapMutation(index1, chromosome);
+      chromosome = this.getKnightTour(index1, chromosome);
+      return [true, chromosome];
     }
-    return false;
+    return [false, chromosome];
+  }
+
+  knightSwapMutation(indexToSwap: number, chromosome: Tile[]): Tile[]
+  {
+    
+    ///to get a valid bit for the indexToSwap
+    let allowedDests: Tile[]; //= chromosome[indexToSwap-1].allowedDest.concat();
+    if(indexToSwap === 0)
+    {
+      allowedDests = chromosome[chromosome.length-1].allowedDest.concat();
+    }
+    else
+    {
+      // console.log("knightSwapMutation indexToSwap ",indexToSwap);
+      // console.log("knightSwapMutation chromosome ",chromosome.concat());
+      // console.log("knightSwapMutation indexToSwap-1 ",(indexToSwap-1));
+      allowedDests = chromosome[(indexToSwap-1)].allowedDest.concat();
+    }    
+    
+    //console.log("knightSwapMutation allowedDests", allowedDests.concat());
+    
+    let newAllowedDestiny = allowedDests[this.getRamdomInt(allowedDests.length)];
+    let index2 = chromosome.indexOf(newAllowedDestiny);
+    let gene1 = chromosome[indexToSwap];
+    let gene2 = chromosome[index2];
+    chromosome[indexToSwap] = gene2;
+    chromosome[index2] = gene1;
+    return this.getKnightTour(indexToSwap, chromosome);
   }
 
   swapMutation(indexToSwap: number, chromosome: Tile[])
@@ -644,9 +681,51 @@ export class ConfigPainelComponent implements OnInit {
     chromosome[index2] = gene1;
   }
 
-  getKnightTour(startChangeIndex: number = 0, baseChromosome: Tile[] = [])
+  /// change if cycle
+  getbiggerValidKnightWay(chromosome: Tile[]): Tile[]
   {
-    let nextTile;
+    let biggerValidWay: Tile[] = [];
+    let tempWay: Tile[] = [];
+
+    tempWay.push(chromosome[0])
+
+    for (let index = 0; index < chromosome.length - 1; index++) {
+      let tile = chromosome[index];
+      let nextTile = chromosome[index+1];      
+      
+      if(tile.allowedDest.includes(nextTile)){
+        //console.log("tile", tile);
+        //console.log("nextTile", nextTile);
+        //console.log(tile.id + ", "+ nextTile.id);
+        tempWay.push(nextTile);
+      }
+      else ///find an invalid... ask if was the big way
+      {
+        if(tempWay.length > biggerValidWay.length)
+        {
+          biggerValidWay = tempWay.concat();
+        }
+        tempWay.length = 0;
+      }
+    }
+    return biggerValidWay;  
+  }  
+
+  ///adaptative
+  // refactorChromosome(chromosome: Tile[], refactorStar: number, refactorEnd: number)
+  // {
+
+  // }
+
+  completeKnightTour(chromosome: Tile[], startToModify)
+  {
+    chromosome = this.getKnightTour(startToModify, chromosome);
+  }
+
+  /// change if cycle
+  getKnightTour(startChangeIndex: number = 0, baseChromosome: Tile[] = []): Tile[]
+  {
+    let nextTile: Tile;
     ///+1 to include startChangeIndex
     let newChromosome = baseChromosome.slice(0, startChangeIndex + 1);
     let tilesToVisit = [];
@@ -662,55 +741,62 @@ export class ConfigPainelComponent implements OnInit {
         tilesToVisit.push(tile)
       }
     }
-    console.log("newChromosome", newChromosome);
-    console.log("tilesToVisit", tilesToVisit);
-    console.log("baseChromosome", baseChromosome);
+    //console.log("newChromosome", newChromosome.concat());
+    //console.log("tilesToVisit", tilesToVisit.concat());
+    //console.log("baseChromosome", baseChromosome.concat());
 
     for (let index = startChangeIndex; index < this.numOfVariables - 1; index++) {
-      console.log("index ",index);
-      console.log("newChromosome[index] ", newChromosome[index]);
+      //console.log("index ",index);
+      //console.log("newChromosome[index] ", newChromosome[index]);
 
-      let gotIt = this.getNextValid(newChromosome[index], newChromosome, nextTile);
-      console.log("nextTilec", nextTile);
-      ///refazer lógica com vetor de disponíveis
-      console.log("gotIt ", gotIt);
-      if(!gotIt)
+      nextTile = this.getNextValid(newChromosome[index], newChromosome);
+      //console.log("nextTile after", nextTile);
+      if(!nextTile)
       {
-        console.log("not got nextValid");
+        //console.log("not got nextValid");
+        let randomPos = this.getRamdomInt(tilesToVisit.length);
+        //console.log("randomPos tilesToVisit", randomPos);
+        nextTile = tilesToVisit[randomPos];
+        
+        //console.log("tilesToVisit after", tilesToVisit.concat());
       }
+      tilesToVisit.splice(tilesToVisit.indexOf(nextTile), 1);
       newChromosome.push(nextTile);
-      console.log("newChromosome after",newChromosome);
+      //console.log("newChromosome after", newChromosome.concat());
     }
+
+    return newChromosome;
   }
 
   ///don't forget to push nextTile where you want to push it
-  getNextValid(currentTile: Tile, occupiedTiles: Tile[], nextTile: Tile): boolean
+  ///and or to take out it from the available places to visit
+  getNextValid(currentTile: Tile, occupiedTiles: Tile[]): Tile
   {
-    let result = false;
+    let nextTile:Tile;
     let remaindAllowedDests = currentTile.allowedDest.concat();
-    console.log("remaindAllowedDests ", remaindAllowedDests);
+    //console.log("remaindAllowedDests ", remaindAllowedDests);
     let randomPos: number;
     while(remaindAllowedDests.length > 0 )
     {
       randomPos = this.getRamdomInt(remaindAllowedDests.length);
-      console.log("randomPos ", randomPos);
+      //console.log("randomPos ", randomPos);
       nextTile = remaindAllowedDests[randomPos];
-      console.log("nextTile ", nextTile);
+      //console.log("nextTile ", nextTile);
       ///se já está ocupado, remova e continue tentando, caso contrário, retorne o endereço encontrado em que não se passou
       if(occupiedTiles.includes(nextTile))
       {
         remaindAllowedDests.splice(randomPos, 1);
-        console.log("occupiedTiles includes ");
+        //console.log("occupiedTiles includes ");
       }
       else
       {
-        console.log("occupiedTiles n includes ");
-        result = true;
-        return result;
+        //console.log("occupiedTiles n includes ");
+        return nextTile;
       }
     }
 
-    return result;
+    nextTile = undefined;
+    return nextTile;
   }
 
   getRandomTour() : Tile[]
@@ -753,8 +839,7 @@ export class ConfigPainelComponent implements OnInit {
     for (let i = 0; i < this.populationSize; i++) 
     {
       //console.log("selectInitialPopulation: " + i);
-      this.getKnightTour();
-      currentGeneration.push(  this.getIndividual(this.getRandomTour())  );
+      currentGeneration.push(  this.getIndividual(this.getKnightTour())  );
     }
     return currentGeneration;
   }
@@ -765,6 +850,7 @@ export class ConfigPainelComponent implements OnInit {
       chromosome: chromosome.concat(),
     };
 
+    indiv.numOfValidKnightMoviments = this.calcNumOfValidMoviments(indiv);
     indiv.fitness = this.calcFitness(indiv);
 
     ///getting the best individuals
@@ -782,7 +868,7 @@ export class ConfigPainelComponent implements OnInit {
       insertedInd = false;
       if (this.hasIndividual(indiv)) 
       {
-        console.log("Already in the best");
+        //console.log("Already in the best");
         insertedInd = true;
         return;
       } 
@@ -844,10 +930,11 @@ export class ConfigPainelComponent implements OnInit {
 
   calcFitness(indiv: individual): number 
   {
-    console.log("calcFitness");
+    //console.log("calcFitness");
     let fitness = 0;
     //indiv.totalDistance = this.getTotalDistance(indiv);
-    fitness = this.calcNumOfValidMoviments(indiv);
+    //fitness = this.calcNumOfValidMoviments(indiv);
+    fitness = this.getbiggerValidKnightWay(indiv.chromosome).length;
     //console.log("fitness", fitness)
     if(fitness < 0) 
     {
@@ -867,11 +954,11 @@ export class ConfigPainelComponent implements OnInit {
       let nextTile = indiv.chromosome[index+1];      
       
       if(tile.allowedDest.includes(nextTile)){
-        console.log("calcNumOfValidMoviments", indiv);
-        console.log("tile", tile);
-        console.log("nextTile", nextTile);
+        //console.log("calcNumOfValidMoviments", indiv);
+        //console.log("tile", tile);
+        //console.log("nextTile", nextTile);
         count++;
-        console.log(tile.id + ", "+ nextTile.id);
+        //console.log(tile.id + ", "+ nextTile.id);
       }
       else{
         
@@ -899,38 +986,6 @@ export class ConfigPainelComponent implements OnInit {
     });
     averageFit /= generation.length;
     return averageFit;
-  }
-
-  /// distância em linha reta em km
-  asTheCrowFlies(ltDeg1: number, lgDeg1: number, latDeg2: number, lgDeg2: number) 
-  {
-    let distance = 0;
-    const RADIANS: number = 180 / 3.14159265;
-    const METRES_IN_MILE: number = 1609.34;
-    
-    if (ltDeg1 == latDeg2 && lgDeg1 == lgDeg2) 
-    {
-      distance = 0;
-    
-    } 
-    else 
-    {
-      // Calculating Distance between Points
-      let lt1 = ltDeg1 / RADIANS;
-      let lg1 = lgDeg1 / RADIANS;
-      let lt2 = latDeg2 / RADIANS;
-      let lg2 = lgDeg2 / RADIANS;
-    
-      // radius of earth in miles (3,958.8) * metres in a mile * position on surface of sphere...
-      distance = (3958.8 / 1000 * METRES_IN_MILE) * Math.acos(Math.sin(lt1) * Math.sin(lt2) + Math.cos(lt1) * Math.cos(lt2) * Math.cos(lg2 - lg1));
-    }
-    //console.log("distance", distance);
-    if(distance < 0)
-    {
-      console.log("NEGATIVE DISTANCE")
-    }
-    //console.log("distance ", distance);
-    return distance; 
   }
   
   /////////////////////
