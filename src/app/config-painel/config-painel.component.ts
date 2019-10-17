@@ -57,10 +57,10 @@ export class ConfigPainelComponent implements OnInit {
     console.log("ngOnInit");
     
 
-    this.probCruzamento = 0.6;
-    this.probMutacao = 0.01;
-    this.populationSize = 4;
-    this.maxNumOfGenerations = 2;
+    this.probCruzamento = 0.01;
+    this.probMutacao = 0.90;
+    this.populationSize = 100;
+    this.maxNumOfGenerations = 80;
     this.bestInd = [];
     this.numOfBestToKeep = 5;
     this.numCurrentGeneration = 0;
@@ -68,14 +68,14 @@ export class ConfigPainelComponent implements OnInit {
     this.isGraphResponsive = true;
     this.showGraph1 = 'block';
     this.showGraph2 = 'none';
-    this.couplesSelectionMode = "Roleta";
-    this.mutationMode = "Gene";
+    this.couplesSelectionMode = "Torneio";
+    this.mutationMode = "Individuo";
     this.checkBoxSelectedItens = ["elitism"];
-    this.numOfIndividualsInTourney = 4;
-    this.numOfElitismInd = 2;
+    this.numOfIndividualsInTourney = 50;
+    this.numOfElitismInd = 50;
 
-    this.numLines = 3;
-    this.numColumns = 3;
+    this.numLines = 8;
+    this.numColumns = 8;
     this.newBoard();
 
   }
