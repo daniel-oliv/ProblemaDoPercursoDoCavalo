@@ -792,18 +792,23 @@ export class ConfigPainelComponent implements OnInit {
   calcNumOfValidMoviments(indiv: individual): number
   {
     let count = 0;
-    for (const iTile in indiv.chromosome) {
-      let tile = indiv.chromosome[iTile];
-      let nextTile = indiv.chromosome[iTile+1];
+    let before = indiv.chromosome.length;
+    ////change if cycle
+    for (let index = 0; index < indiv.chromosome.length - 1; index++) {
+      let tile = indiv.chromosome[index];
+      let nextTile = indiv.chromosome[index+1];      
+      
       if(tile.allowedDest.includes(nextTile)){
         console.log("calcNumOfValidMoviments", indiv);
         console.log("tile", tile);
         console.log("nextTile", nextTile);
         count++;
+        console.log(tile.id + ", "+ nextTile.id);
       }
       else{
-        console.log(tile.id + nextTile.id);
+        
       }
+      
     }
     indiv.numOfValidKnightMoviments = count;
     return count;
