@@ -43,7 +43,7 @@ export class ConfigPainelComponent implements OnInit {
 
   //numOfIntervals: number;
   numOfVariables: number;
-  destinations: Variable[];
+  destinations: Tile[];
   mapLineData: marker[];
 
   numLines: number;
@@ -468,7 +468,7 @@ export class ConfigPainelComponent implements OnInit {
   applyPMXCrossover(couple: individual[]): individual[]
   {
     let newIndividuals: individual[] = [];
-    let newChromosome: Variable[] = [];
+    let newChromosome: Tile[] = [];
     let indexesToCross: number[] = [];
 
     ///Math.floor(Math.random()*(this.resolution - 1)) 0 to 8 - +=1 1 to 9
@@ -534,7 +534,7 @@ export class ConfigPainelComponent implements OnInit {
 
   /// the indexToCross1 must be less than indexToCross2
   mountPMXCromosome(indexToCross1: number, indexToCross2: number, 
-    baseChromosome: Variable[], newFixedBlock: Variable[], oldblock: Variable[]): Variable[]
+    baseChromosome: Tile[], newFixedBlock: Tile[], oldblock: Tile[]): Tile[]
   {
     //console.log("baseChromosome", baseChromosome);
 
@@ -563,7 +563,7 @@ export class ConfigPainelComponent implements OnInit {
     return newChromosome;
   }
 
-  getNoRepeatedGene(gene: Variable, fixedBlock: Variable[], replacedBlock: Variable[]): Variable
+  getNoRepeatedGene(gene: Tile, fixedBlock: Tile[], replacedBlock: Tile[]): Tile
   {
     //let getIndexOfLocation = 
     //if( this.hasLocationID(fixedBlock, gene) )
@@ -609,7 +609,7 @@ export class ConfigPainelComponent implements OnInit {
     }
   }
 
-  tryMutationInGenes(newChromosome: Variable[]): boolean
+  tryMutationInGenes(newChromosome: Tile[]): boolean
   {
     let mutationApplied = false;
     for (let varIndex = 0; varIndex < newChromosome.length; varIndex++) 
@@ -626,7 +626,7 @@ export class ConfigPainelComponent implements OnInit {
       return mutationApplied;
   }
 
-  tryOneMutation(chromosome: Variable[]): boolean
+  tryOneMutation(chromosome: Tile[]): boolean
   {
     if (Math.random() < this.probMutacao)
     {
@@ -637,7 +637,7 @@ export class ConfigPainelComponent implements OnInit {
     return false;
   }
 
-  swapMutation(indexToSwap: number, chromosome: Variable[])
+  swapMutation(indexToSwap: number, chromosome: Tile[])
   {
     let index2 = Math.floor(Math.random() * chromosome.length);
     let gene1 = chromosome[indexToSwap];
@@ -646,9 +646,9 @@ export class ConfigPainelComponent implements OnInit {
     chromosome[index2] = gene1;
   }
 
-  getRandomTour() : Variable[]
+  getRandomTour() : Tile[]
   {
-    let chromosome: Variable[] = [];
+    let chromosome: Tile[] = [];
     //console.time();    
     let remainderDests = this.destinations.concat();
     //console.timeEnd();
@@ -691,7 +691,7 @@ export class ConfigPainelComponent implements OnInit {
     return currentGeneration;
   }
 
-  getIndividual(chromosome: Variable[]): individual {
+  getIndividual(chromosome: Tile[]): individual {
     //console.log("getIndividual");
     let indiv: individual = {
       chromosome: chromosome.concat(),
@@ -865,7 +865,7 @@ export class ConfigPainelComponent implements OnInit {
 
 interface individual {
   /// indicates the order to visit the cities, that is, the tour
-  chromosome?: Variable[];
+  chromosome?: Tile[];
 
   ///totalDistance summing the distances between all places in the chromosome, including between the last and the first
   numOfValidKnightMoviments?: number;
@@ -876,10 +876,6 @@ interface individual {
   ///generation number
   generation?: number;
 
-}
-
-interface Variable{
-  allowedDest: Tile[];
 }
  
 declare interface marker {
