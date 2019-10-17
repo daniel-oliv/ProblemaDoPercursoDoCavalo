@@ -44,7 +44,7 @@ import { GameBoardComponent } from './game-board/game-board.component';
     AgmCoreModule.forRoot({
       // please get your own API key here:
       // https://developers.google.com/maps/documentation/javascript/get-api-key?hl=en
-      apiKey: 'AIzaSyDO9bV8thdfvCbXLSWAkcACR84McRGDvSM'
+      apiKey: 'XXXXXXXXXXXXXXXXXXXXXXXXXXX'
     })
   ],
   providers: [],
