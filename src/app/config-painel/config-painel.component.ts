@@ -636,13 +636,15 @@ export class ConfigPainelComponent implements OnInit {
   {
     if (Math.random() < this.probMutacao)
     {
-      let index1 = Math.floor(Math.random() * chromosome.length);
+      let index1 = Math.floor(Math.random() * 45);
       this.knightSwapMutation(index1, chromosome);
-      chromosome = this.getKnightTour(index1, chromosome);
+      chromosome = this.getKnightTour(index1,chromosome);
       return [true, chromosome];
     }
     return [false, chromosome];
   }
+
+  //getTilesInWrong 
 
   knightSwapMutation(indexToSwap: number, chromosome: Tile[]): Tile[]
   {
@@ -706,6 +708,8 @@ export class ConfigPainelComponent implements OnInit {
           biggerValidWay = tempWay.concat();
         }
         tempWay.length = 0;
+        /// change this if you consider backward correction
+        return biggerValidWay
       }
     }
     return biggerValidWay;  
@@ -723,11 +727,11 @@ export class ConfigPainelComponent implements OnInit {
   }
 
   /// change if cycle
-  getKnightTour(startChangeIndex: number = 0, baseChromosome: Tile[] = []): Tile[]
+  getKnightTour(lastIndexToKeep: number = 0, baseChromosome: Tile[] = []): Tile[]
   {
     let nextTile: Tile;
     ///+1 to include startChangeIndex
-    let newChromosome = baseChromosome.slice(0, startChangeIndex + 1);
+    let newChromosome = baseChromosome.slice(0, lastIndexToKeep + 1);
     let tilesToVisit = [];
     
     if(newChromosome.length === 0)
@@ -745,15 +749,17 @@ export class ConfigPainelComponent implements OnInit {
     //console.log("tilesToVisit", tilesToVisit.concat());
     //console.log("baseChromosome", baseChromosome.concat());
 
-    for (let index = startChangeIndex; index < this.numOfVariables - 1; index++) {
-      //console.log("index ",index);
-      //console.log("newChromosome[index] ", newChromosome[index]);
+    for (let index = lastIndexToKeep; index < this.numOfVariables - 1; index++) {
+      console.log("index ",index);
+      console.log("newChromosome.concat", newChromosome.concat());
+      console.log("newChromosome[index] ", newChromosome[index]);
 
-      nextTile = this.getNextValid(newChromosome[index], newChromosome);
+      //nextTile = this.getNextValid(newChromosome[index], newChromosome);
+      nextTile = this.getMoreLonelyNeighbor(newChromosome[index].allowedDest, newChromosome);
       //console.log("nextTile after", nextTile);
       if(!nextTile)
       {
-        //console.log("not got nextValid");
+        console.log("not got nextValid");
         let randomPos = this.getRamdomInt(tilesToVisit.length);
         //console.log("randomPos tilesToVisit", randomPos);
         nextTile = tilesToVisit[randomPos];
@@ -761,6 +767,74 @@ export class ConfigPainelComponent implements OnInit {
         //console.log("tilesToVisit after", tilesToVisit.concat());
       }
       tilesToVisit.splice(tilesToVisit.indexOf(nextTile), 1);
+      newChromosome.push(nextTile);
+      //console.log("newChromosome after", newChromosome.concat());
+    }
+
+    return newChromosome;
+  }
+
+  /// change if cycle
+  /// starts seeing the next tile of the starts indexes
+  getLimitedKnightTour(startSmarIndex: number = 0, startRandomIndex: number = Math.floor(0.8   * this.numOfVariables), baseChromosome: Tile[] = []): Tile[]
+  {
+    //console.log("startRandomIndex", startRandomIndex);
+    let nextTile: Tile;
+    ///+1 to include startChangeIndex
+    let newChromosome = baseChromosome.slice(0, startSmarIndex + 1);
+    let tilesToVisit = [];
+    
+    if(newChromosome.length === 0)
+    {
+      newChromosome.push(this.destinations[this.getRamdomInt(this.numOfVariables)]);
+    }
+
+    for (const tile of this.destinations) {
+      if(!newChromosome.includes(tile))
+      {
+        tilesToVisit.push(tile)
+      }
+    }
+    //console.log("newChromosome", newChromosome.concat());
+    //console.log("tilesToVisit", tilesToVisit.concat());
+    //console.log("baseChromosome", baseChromosome.concat());
+
+    for (let index = startSmarIndex; index < startRandomIndex; index++) {
+      console.log("index ",index);
+      console.log("newChromosome[index] ", newChromosome[index]);
+
+      //nextTile = this.getNextValid(newChromosome[index], newChromosome);
+      nextTile = this.getMoreLonelyNeighbor(newChromosome[index].allowedDest, newChromosome);
+      //console.log("nextTile after", nextTile);
+      if(!nextTile)
+      {
+        console.log("not got nextValid");
+        let randomPos = this.getRamdomInt(tilesToVisit.length);
+        console.log("randomPos tilesToVisit", randomPos);
+        nextTile = tilesToVisit[randomPos];
+        
+        console.log("tilesToVisit after", tilesToVisit.concat());
+      }
+      tilesToVisit.splice(tilesToVisit.indexOf(nextTile), 1);
+      newChromosome.push(nextTile);
+      //console.log("newChromosome after guided", newChromosome.concat());
+    }
+
+    for (let index = startRandomIndex; index < this.numOfVariables - 1; index++) {
+      //console.log("index ",index);
+      //console.log("newChromosome[index] ", newChromosome[index]);
+      let randomPos = this.getRamdomInt(tilesToVisit.length);
+        //console.log("randomPos tilesToVisit", randomPos);
+      nextTile = tilesToVisit[randomPos];
+      if(!nextTile)
+      {
+        console.log("AAAAAAAAAAAAAAAAAAAAAAAA");
+        console.log("tilesToVisit after", tilesToVisit.concat());
+        console.log("randomPos after", randomPos);
+        console.log("nextTile after", randomPos);
+        
+      }
+      tilesToVisit.splice(randomPos, 1);
       newChromosome.push(nextTile);
       //console.log("newChromosome after", newChromosome.concat());
     }
@@ -797,6 +871,45 @@ export class ConfigPainelComponent implements OnInit {
 
     nextTile = undefined;
     return nextTile;
+  }
+
+  getMoreLonelyNeighbor(neighbors: Tile[], occupiedTiles: Tile[])
+  {
+    let remaindAllowedDests = this.getEmptyNeighbors(neighbors, occupiedTiles);
+    let lonelyNeighbor: Tile;
+    
+    ///if there is no empty neighbor  
+    if(remaindAllowedDests.length === 0)
+    {
+      console.log("To see if is undefined lonelyNeighbor ", lonelyNeighbor);
+      return undefined;
+    }
+
+    lonelyNeighbor = remaindAllowedDests[0];
+
+    for (const neighbor of remaindAllowedDests)
+    {
+      if(this.getEmptyNeighbors(neighbor.allowedDest, occupiedTiles).length <
+          this.getEmptyNeighbors(lonelyNeighbor.allowedDest, occupiedTiles).length
+      )
+      {
+        lonelyNeighbor = neighbor;
+      }
+    }
+
+    return lonelyNeighbor;
+  }
+
+  getEmptyNeighbors(neighbors: Tile[], occupiedTiles: Tile[]): Tile[]
+  {
+    let remaindAllowedDests = neighbors.concat();
+    for (const tile of remaindAllowedDests) {
+      if(occupiedTiles.includes(tile))
+      {
+        remaindAllowedDests.splice(remaindAllowedDests.indexOf(tile), 1);
+      }
+    }
+    return remaindAllowedDests;
   }
 
   getRandomTour() : Tile[]
@@ -934,6 +1047,7 @@ export class ConfigPainelComponent implements OnInit {
     let fitness = 0;
     //indiv.totalDistance = this.getTotalDistance(indiv);
     //fitness = this.calcNumOfValidMoviments(indiv);
+    //console.log("indiv", indiv);
     fitness = this.getbiggerValidKnightWay(indiv.chromosome).length;
     //console.log("fitness", fitness)
     if(fitness < 0) 
