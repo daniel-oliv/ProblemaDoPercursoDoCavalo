@@ -18,6 +18,7 @@ import {RadioButtonModule} from 'primeng/radiobutton';
 import {CheckboxModule} from 'primeng/checkbox';
 import { ScatterComponent } from './scatter/scatter.component';
 import { MapAgmComponent } from './map-agm/map-agm.component';
+import { GameBoardComponent } from './game-board/game-board.component';
 
 
 
@@ -26,7 +27,8 @@ import { MapAgmComponent } from './map-agm/map-agm.component';
     AppComponent,
     ConfigPainelComponent,
     ScatterComponent,
-    MapAgmComponent
+    MapAgmComponent,
+    GameBoardComponent
   ],
   imports: [
     BrowserModule,
