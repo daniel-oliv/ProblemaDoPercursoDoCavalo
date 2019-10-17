@@ -6,7 +6,6 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
 //ng2-charts
 import { ChartsModule } from 'ng2-charts';
-import { AgmCoreModule } from '@agm/core';
 
 import { AppComponent } from './app.component';
 import { ConfigPainelComponent } from './config-painel/config-painel.component';
@@ -16,8 +15,6 @@ import {TableModule} from 'primeng/table';
 import {AccordionModule} from 'primeng/accordion';
 import {RadioButtonModule} from 'primeng/radiobutton';
 import {CheckboxModule} from 'primeng/checkbox';
-import { ScatterComponent } from './scatter/scatter.component';
-import { MapAgmComponent } from './map-agm/map-agm.component';
 import { GameBoardComponent } from './game-board/game-board.component';
 
 
@@ -26,8 +23,6 @@ import { GameBoardComponent } from './game-board/game-board.component';
   declarations: [
     AppComponent,
     ConfigPainelComponent,
-    ScatterComponent,
-    MapAgmComponent,
     GameBoardComponent
   ],
   imports: [
@@ -41,11 +36,6 @@ import { GameBoardComponent } from './game-board/game-board.component';
     RadioButtonModule,
     CheckboxModule,
     ChartsModule,
-    AgmCoreModule.forRoot({
-      // please get your own API key here:
-      // https://developers.google.com/maps/documentation/javascript/get-api-key?hl=en
-      apiKey: 'XXXXXXXXXXXXXXXXXXXXXXXXXXX'
-    })
   ],
   providers: [],
   bootstrap: [AppComponent]
