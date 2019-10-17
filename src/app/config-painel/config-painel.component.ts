@@ -2,8 +2,6 @@ import { Component, OnInit, ɵConsole } from "@angular/core";
 import {Tile} from '../model/tile';
 import {Board} from '../model/board';
 
-const EQUATORIAL_RADIUS = 6378;
-
 @Component({
   selector: "app-config-painel",
   templateUrl: "./config-painel.component.html",
@@ -646,6 +644,75 @@ export class ConfigPainelComponent implements OnInit {
     chromosome[index2] = gene1;
   }
 
+  getKnightTour(startChangeIndex: number = 0, baseChromosome: Tile[] = [])
+  {
+    let nextTile;
+    ///+1 to include startChangeIndex
+    let newChromosome = baseChromosome.slice(0, startChangeIndex + 1);
+    let tilesToVisit = [];
+    
+    if(newChromosome.length === 0)
+    {
+      newChromosome.push(this.destinations[this.getRamdomInt(this.numOfVariables)]);
+    }
+
+    for (const tile of this.destinations) {
+      if(!newChromosome.includes(tile))
+      {
+        tilesToVisit.push(tile)
+      }
+    }
+    console.log("newChromosome", newChromosome);
+    console.log("tilesToVisit", tilesToVisit);
+    console.log("baseChromosome", baseChromosome);
+
+    for (let index = startChangeIndex; index < this.numOfVariables - 1; index++) {
+      console.log("index ",index);
+      console.log("newChromosome[index] ", newChromosome[index]);
+
+      let gotIt = this.getNextValid(newChromosome[index], newChromosome, nextTile);
+      console.log("nextTilec", nextTile);
+      ///refazer lógica com vetor de disponíveis
+      console.log("gotIt ", gotIt);
+      if(!gotIt)
+      {
+        console.log("not got nextValid");
+      }
+      newChromosome.push(nextTile);
+      console.log("newChromosome after",newChromosome);
+    }
+  }
+
+  ///don't forget to push nextTile where you want to push it
+  getNextValid(currentTile: Tile, occupiedTiles: Tile[], nextTile: Tile): boolean
+  {
+    let result = false;
+    let remaindAllowedDests = currentTile.allowedDest.concat();
+    console.log("remaindAllowedDests ", remaindAllowedDests);
+    let randomPos: number;
+    while(remaindAllowedDests.length > 0 )
+    {
+      randomPos = this.getRamdomInt(remaindAllowedDests.length);
+      console.log("randomPos ", randomPos);
+      nextTile = remaindAllowedDests[randomPos];
+      console.log("nextTile ", nextTile);
+      ///se já está ocupado, remova e continue tentando, caso contrário, retorne o endereço encontrado em que não se passou
+      if(occupiedTiles.includes(nextTile))
+      {
+        remaindAllowedDests.splice(randomPos, 1);
+        console.log("occupiedTiles includes ");
+      }
+      else
+      {
+        console.log("occupiedTiles n includes ");
+        result = true;
+        return result;
+      }
+    }
+
+    return result;
+  }
+
   getRandomTour() : Tile[]
   {
     let chromosome: Tile[] = [];
@@ -686,6 +753,7 @@ export class ConfigPainelComponent implements OnInit {
     for (let i = 0; i < this.populationSize; i++) 
     {
       //console.log("selectInitialPopulation: " + i);
+      this.getKnightTour();
       currentGeneration.push(  this.getIndividual(this.getRandomTour())  );
     }
     return currentGeneration;
