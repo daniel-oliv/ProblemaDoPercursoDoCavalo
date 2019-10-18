@@ -706,6 +706,7 @@ export class ConfigPainelComponent implements OnInit {
           biggerValidWay = tempWay.concat();
         }
         tempWay.length = 0;
+        return biggerValidWay;
       }
     }
     return biggerValidWay;  
